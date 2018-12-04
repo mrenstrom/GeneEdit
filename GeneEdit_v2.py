@@ -554,7 +554,6 @@ for k,(seq,count,cigar,cgl) in sortD:
           subs.append(mut)
         i += 1
         j += 1
-       if len(sub)
     elif m[0] == "D":
       j = j + cmdLength
     elif m[0] == 'I':
