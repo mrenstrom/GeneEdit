@@ -148,134 +148,279 @@ def alignment(csvF,txtfile,group,ct,refseq):
         xl.writerow([" ",refseq])
         with open(txtfile,'w') as fh:
             for (k,seq,count,cigar,cgl,subs,insertions) in group:
-                #
-                # Append subs to cigar
-                #
-                fh.write(">{}\n".format(k))
-                fh.write("{}\n".format(count))
-                fh.write(str(float(count)/float(ct))+"\n")
 
-                freq = (str(float(count)/float(ct)))
-                sub_list = ",".join(map(str, subs))
-                ins_list = "".join(insertions)
-                
-                #    
-                # To print the reference according to the alignment.
-                #
-                i = 0
-                j = 0
-                for m in cgl:
-                    cmdLength = int(m[1])
-                    if m[0] == "M":
-                      for t in range(0,cmdLength):
-                        if seq[i] != refseq[j]:
-                          fh.write(refseq[j])
-                        else:
-                            fh.write(refseq[j])
-                        i += 1
-                        j += 1
-                    elif m[0] == "D":
+                # Filter sequences that do not have insertions and deletions
+                if cigar.find("D") > -1 or cigar.find("I") > -1:
+                    #
+                    # Append subs to cigar
+                    #
+                    fh.write(">{}\n".format(k))
+                    fh.write("{}\n".format(count))
+                    fh.write(str(float(count)/float(ct))+"\n")
+
+                    freq = (str(float(count)/float(ct)))
+                    sub_list = ",".join(map(str, subs))
+                    ins_list = "".join(insertions)
+
+                    #print(k + "\t" + seq)
+                    #    
+                    # To print the reference according to the alignment.
+                    #
+                    i = 0
+                    j = 0
+                    for m in cgl:
                         cmdLength = int(m[1])
-                        j = j + cmdLength
-                        for u in range(0, cmdLength):
-                            fh.write(refseq[u])
-                    elif m[0] == 'I':
-                        space = int(m[1])
-                        for s in range(0,space):
-                            fh.write(" ")
-                        i = i + cmdLength
+                        if m[0] == "M":
+                          for t in range(0,cmdLength):
+                            if seq[i] != refseq[j]:
+                              fh.write(refseq[j])
+                            else:
+                                fh.write(refseq[j])
+                            i += 1
+                            j += 1
+                        elif m[0] == "D":
+                            cmdLength = int(m[1])
+                            j = j + cmdLength
+                            for u in range(0, cmdLength):
+                                fh.write(refseq[u])
+                        elif m[0] == 'I':
+                            space = int(m[1])
+                            for s in range(0,space):
+                                fh.write(" ")
+                            i = i + cmdLength
 
-                fh.write("\n")  
+                    fh.write("\n")  
 
-                #
-                # To print alignment: Match = |, D = -, Sub = *
-                #
-                i = 0
-                j = 0
-                for m in cgl:
-                    cmdLength = int(m[1])
-                    if m[0] == "M":
-                      for t in range(0,cmdLength):
-                        if seq[i] != refseq[j]:
-                          fh.write("*")
-                        else:
-                            fh.write("|")
-                        i += 1
-                        j += 1
-                    elif m[0] == "D":
+                    #
+                    # To print alignment: Match = |, D = -, Sub = *
+                    #
+                    i = 0
+                    j = 0
+                    for m in cgl:
                         cmdLength = int(m[1])
-                        j = j + cmdLength
-                        for u in range(0, cmdLength):
-                            fh.write(" ")
-                    elif m[0] == 'I':
-                        space = int(m[1])
-                        for s in range(0,space):
-                            fh.write(" ")
-                        i = i + cmdLength
+                        if m[0] == "M":
+                          for t in range(0,cmdLength):
+                            if seq[i] != refseq[j]:
+                              fh.write("*")
+                            else:
+                                fh.write("|")
+                            i += 1
+                            j += 1
+                        elif m[0] == "D":
+                            cmdLength = int(m[1])
+                            j = j + cmdLength
+                            for u in range(0, cmdLength):
+                                fh.write(" ")
+                        elif m[0] == 'I':
+                            space = int(m[1])
+                            for s in range(0,space):
+                                fh.write(" ")
+                            i = i + cmdLength
 
-                fh.write("\n")  
+                    fh.write("\n")  
 
-                #
-                # To print alignment: D = -, Substitution = lower case
-                #
-                i = 0
-                j = 0
-                al_seq = ""
-                for m in cgl:
-                    cmdLength = int(m[1])
-                    if m[0] == "M":
-                      for t in range(0,cmdLength):
-                        if seq[i] != refseq[j]:
-                          fh.write(seq[i].lower())
-                          al_seq = al_seq + seq[i].lower()
-                        else:
-                            fh.write(seq[i])
-                            al_seq = al_seq + seq[i]
-                        i += 1
-                        j += 1
-                    elif m[0] == "D":
+                    #
+                    # To print alignment: D = -, Substitution = lower case
+                    #
+                    i = 0
+                    j = 0
+                    al_seq = ""
+                    for m in cgl:
                         cmdLength = int(m[1])
-                        j = j + cmdLength
-                        for u in range(0, cmdLength):
-                            fh.write('-')
-                            al_seq = al_seq + "-"
-                    elif m[0] == 'I':
-                      insertSeq = seq[i:i+cmdLength]
-                      fh.write(insertSeq)
-                      al_seq = al_seq + insertSeq
-                      i = i + cmdLength
+                        if m[0] == "M":
+                          for t in range(0,cmdLength):
+                            if seq[i] != refseq[j]:
+                              fh.write(seq[i].lower())
+                              al_seq = al_seq + seq[i].lower()
+                            else:
+                                fh.write(seq[i])
+                                al_seq = al_seq + seq[i]
+                            i += 1
+                            j += 1
+                        elif m[0] == "D":
+                            cmdLength = int(m[1])
+                            j = j + cmdLength
+                            for u in range(0, cmdLength):
+                                fh.write('-')
+                                al_seq = al_seq + "-"
+                        elif m[0] == 'I':
+                          insertSeq = seq[i:i+cmdLength]
+                          fh.write(insertSeq)
+                          al_seq = al_seq + insertSeq
+                          i = i + cmdLength
 
-                fh.write("\n")
+                    fh.write("\n")
 
-                xl.writerow([k,al_seq,count,freq,cigar,sub_list,ins_list])
-                                
-                #
-                # indel cigar
-                #
-                fh.write("INDEL,")
-                first = True
-                for m in cgl:
-                  if first:
-                    fh.write("{},{}".format(m[0],m[1]))
-                  else:
-                    fh.write(",{},{}".format(m[0],m[1]))
-                  first = False
-                fh.write("\n")
-                #
-                # substitutions
-                #
-                fh.write("SUB,")
-                first = True
-                for s in subs:
-                  if first:
-                    fh.write(str(s[0]) + "," + s[1] + "," + s[3])
-                  else:
-                    fh.write("," + str(s[0]) + "," + s[1] + "," + s[3])
-                  first = False
-                fh.write("\n")
+                    xl.writerow([k,al_seq,count,freq,cigar,sub_list,ins_list])
+                                    
+                    #
+                    # indel cigar
+                    #
+                    fh.write("INDEL,")
+                    first = True
+                    for m in cgl:
+                      if first:
+                        fh.write("{},{}".format(m[0],m[1]))
+                      else:
+                        fh.write(",{},{}".format(m[0],m[1]))
+                      first = False
+                    fh.write("\n")
+                    #
+                    # substitutions
+                    #
+                    fh.write("SUB,")
+                    first = True
+                    for s in subs:
+                      if first:
+                        fh.write(str(s[0]) + "," + s[1] + "," + s[3])
+                      else:
+                        fh.write("," + str(s[0]) + "," + s[1] + "," + s[3])
+                      first = False
+                    fh.write("\n")
 
-    return print("Results written in the files!")
-    
+        return print("Results written in the files!")
+
+#--------------------------------------------------------------------------------
+#
+# Make fasta files for alignment; Run needle
+# 
+#--------------------------------------------------------------------------------
+def needle(sd,outFile,refFile,samFile):
+    #
+    # sort in order of sequence count
+    #
+    ssd = sorted(sd.items(),key=lambda al: al[1],reverse=True)  # smallest first
+    #
+    # create an ID for each combined seq group, store in preSeqDict based on ID
+    #
+    preSeqDict = {}
+    #
+    # create fasta file for alignment
+    #
+    with open(outFile,'w') as fh:
+        id = 0
+        for k,v in ssd:
+            if v > 1:
+              seqID = "ID_{}".format(id)
+              preSeqDict[seqID] = (k,v)
+              fh.write(">" + seqID + "\n")
+              fh.write("{}\n".format(k))
+              id += 1
+              
+    # Call out to needle to generate alignment string - CIGAR        
+    print("Step 3: Run Needle")
+    # if there is a problem, remember to "ml emboss"
+    #
+    print(refFile,outFile,samFile)
+    p = subprocess.Popen(["needle", 
+        "-asequence",refFile,
+        "-bsequence",outFile,
+        "-gapopen","10.0",
+        "-gapextend","0.5",
+        "-aformat3","sam",
+        "-outfile",samFile], stdout=subprocess.PIPE)
+    print(p.communicate())
+
+    return preSeqDict
+#-----------------------------------------------------------------------------
+#
+# Identify substitutions based on alignment
+# Create sequence groups by combining information for each seqeunce.
+#
+#------------------------------------------------------------------------------
+def seq_group(samFile,preSeqDict,refseq):
+    #
+    # Read in sam alignment, based in ID add to seqDict
+    #
+    seqDict = {}
+    with open(samFile,'r') as fh:
+      while True:
+        l = fh.readline().strip()
+        if l == "": break
+        l = l.split('\t')
+        if l[0][0] == "@": continue
+        k = l[0]
+        cigar = l[5]
+        cgList = parseInsertCigar(cigar)
+        #
+        # get original sequence and count from seqDict
+        # -- can't find key is fatal error --
+        s,count = preSeqDict[k]
+        #
+        # add on cigar string and cgList (tuple list of alignment)
+        #   -- sequences with really long cigar probably mean primer bound
+        #      to some remote DNA and alignment is bonkers
+        #      12 is arbitrary...some seq ave lots of SNPs but usually 3 is normal
+        #
+        if len(cgList) <= 12:
+          seqDict[k] = (s,count,cigar,cgList)
+        else:
+          print("Bad alignment for sequence")
+          #print(s)
+          print(cigar)
+
+    #
+    # don't accidentally use
+    #
+    preSeqDict = None
+    #
+    # Use alignment + sequence + reference sequence to identify substitutions and insertion sequences 
+    #
+    # sortD = list if dictionary k,v pairs sorted by count
+    #
+    sortD = sorted(seqDict.items(),key=lambda al: al[1][1],reverse=True)  # smallest first
+    #
+    # finalGroups will be the final list of sequence groups
+    #
+    finalGroups =[]
+    #
+    # for each sequence group do a base-by-base comparison to refseq 
+    #
+    for k,(seq,count,cigar,cgl) in sortD:
+      #print("012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789")
+      #for m in cgl:
+      #  print(m) 
+      #
+      # substitution mutations and insertion sequences
+      #
+      subs = []
+      insertions = []
+      align_seq = []
+      #
+      # base by base comparison
+      #    i = test sequence index
+      #    j = reference sequence index
+      #    cgl = list of (command,length) from CIGAR  M = match, I = insert, D = deletion
+      #
+      i = 0
+      j = 0
+
+      for m in cgl:
+        cmdLength = int(m[1])
+        if m[0] == "M":
+          for t in range(0,cmdLength):
+            #print("comp {} {}".format(i,j))
+            if seq[i] != refseq[j]:
+              #print("substitue at ",i,seq[i],j,refseq[j])
+              mut = (j+1,refseq[j],i+1,seq[i])  # Increase the position no. by 1 (i and j) because the count in python begins at 0.
+              subs.append(mut)
+            i += 1
+            j += 1
+        elif m[0] == "D":
+          j = j + cmdLength
+        elif m[0] == 'I':
+          insertSeq = seq[i:i+cmdLength]
+          insertions.append(insertSeq)
+          i = i + cmdLength
+
+     #
+     # add entry for sequence group with all data with the condition to limit substitutions to 12.
+     # 
+      if len(subs) <= 10:
+        finalGroups.append((k,seq,count,cigar,cgl,subs,insertions))
+
+    return finalGroups
+       
 #---------------------------------------------------------------------------
 #   Main Entry
 #
@@ -310,23 +455,24 @@ elif primerCode == "CD33E1":
   refseq       = "TCCCTTCCTCTTTTCTGCTCACACAGGAAGCCCTGGAAGCTGCTTCCTCAGACATGCCGCTGCTGCTACTGCTGCCCCTGCTGTGGGCAGGTGAGTGGCTGTGGGGAGAGGGGTTGTCGGGCTGGGCCGAGCTGACCCTCGTTTCCCCACAGGGGCCCTGGCTATGGATCCAAATTTCTGG"
   refFile      = "CD33E1.fa"
   refFile2     = "Pseudogene.fa"
-  pseudo       = "TGCCACTGCTGCTACTGCTGCCCCTGCTGTGGGCAGGTGAATGGCTGCGGGGAGAGGGGTTGTCGGGCTGGGCCGAGCTGACCCTCGTTTCCCCACAGGGGCCCTGGCTATGGATCCAAAAATCCGGCTGCAAGTGCAGGAGTCAGTGACGGTACAGGAGGGTTTGTGCGTCCTCGTGCCCTGCACTTTCTCCCATCCCATACCCTACTACAACAGGAATTTCTCAGTTCATGGTTACTGGTTCCGGGAAGGAGCCATTGTATCCAGGGACTCTCCAGTGGCCACAAACAAGCTAGATCAAGAAGTACAGGAGGAGACTCAGGGCTGATTCCGCCTCCTTGGGGATCCCAGTAAGAACAACTGCTCCCTGAGCATCGTAGACGCCAGGAGGAGGGATAATCGTTCATACTTCTTTCGGATGGAGAGAGGAAGTACCAAACACAGTTACAAATCTCCCCAGCTCTCTGTGCATGTGACAGGTGAGGCACAGGCTTCAGAAGCAGCCACAAGGGAAGGTCAAAGGGACCTCAGGACAGGGCTTGGGATGGGACCCATGTCCTGGAAGGGGGTTGGGAATGAAGCCTGTC"
+  #pseudo       = "TGCCACTGCTGCTACTGCTGCCCCTGCTGTGGGCAGGTGAATGGCTGCGGGGAGAGGGGTTGTCGGGCTGGGCCGAGCTGACCCTCGTTTCCCCACAGGGGCCCTGGCTATGGATCCAAAAATCCGGCTGCAAGTGCAGGAGTCAGTGACGGTACAGGAGGGTTTGTGCGTCCTCGTGCCCTGCACTTTCTCCCATCCCATACCCTACTACAACAGGAATTTCTCAGTTCATGGTTACTGGTTCCGGGAAGGAGCCATTGTATCCAGGGACTCTCCAGTGGCCACAAACAAGCTAGATCAAGAAGTACAGGAGGAGACTCAGGGCTGATTCCGCCTCCTTGGGGATCCCAGTAAGAACAACTGCTCCCTGAGCATCGTAGACGCCAGGAGGAGGGATAATCGTTCATACTTCTTTCGGATGGAGAGAGGAAGTACCAAACACAGTTACAAATCTCCCCAGCTCTCTGTGCATGTGACAGGTGAGGCACAGGCTTCAGAAGCAGCCACAAGGGAAGGTCAAAGGGACCTCAGGACAGGGCTTGGGATGGGACCCATGTCCTGGAAGGGGGTTGGGAATGAAGCCTGTC"
+  pseudo       = "TGCCACTGCTGCTACTGCTGCCCCTGCTGTGGGCAGGTGAATGGCTGCGGGGAGAGGGGTTGTCGGGCTGGGCCGAGCTGACCCTCGTTTCCCCACAGGGGCCCTGGCTATGGATCCAAAAATCCGG"
 else:
   print("Unknown primer code")
   exit(0)
 #
-# open fastaq
+# open fastq
 #
+print("Step 1: Creating output files.")
 inFile      = "/home/dpande/stitched_reads/" + inputFileBase + ".fastq"
-outFile     = "/home/dpande/ge_reads/" + inputFileBase + "_ge.fasta"
-pseudoFile  = "/home/dpande/ge_reads/" + inputFileBase + "_pseudo_ge.fasta"
-samFile     = "/home/dpande/ge_reads/" + inputFileBase + "_ge.sam"
-pSamFile    = "/home/dpande/ge_reads/" + inputFileBase + "_pseudo_ge.sam"
-mutFile     = "/home/dpande/ge_reads/" + inputFileBase + "_ge.txt"
-pmutFile    = "/home/dpande/ge_reads/" + inputFileBase + "_pseudo_ge.txt"
-csvFile     = "/home/dpande/ge_reads/" + inputFileBase + "_ge.csv"
-pcsvFile    = "/home/dpande/ge_reads/" + inputFileBase + "_pseudogene_ge.csv"
-#alignFile   = "/home/dpande/ge_reads/" + inputFileBase + "_align_ge.txt"
+outFile     = "/home/dpande/try/" + inputFileBase + "_ge.fasta"
+pseudoFile  = "/home/dpande/try/" + inputFileBase + "_pseudo_ge.fasta"
+samFile     = "/home/dpande/try/" + inputFileBase + "_ge.sam"
+pSamFile    = "/home/dpande/try/" + inputFileBase + "_pseudo_ge.sam"
+mutFile     = "/home/dpande/try/" + inputFileBase + "_ge.txt"
+pmutFile    = "/home/dpande/try/" + inputFileBase + "_pseudo_ge.txt"
+csvFile     = "/home/dpande/try/" + inputFileBase + "_ge.csv"
+pcsvFile    = "/home/dpande/try/" + inputFileBase + "_pseudogene_ge.csv"
 
 ref = open("/home/dpande/" + refFile, 'r')
 ref_hd = ref.readline().strip()
@@ -342,11 +488,12 @@ pseudoCount = 0
 #
 sd = defaultdict(int)
 sd_pseudo = defaultdict(int)
+print("Step 2: Primer check and pseudogene check!")
 #
 # read fastq file, check Q, check primers, combine indentical
 # Check for pseudogene
 #
-with open(inFile,'r') as fh:
+with open(inFile,'r') as fh:  
   while True:
     id = fh.readline().strip()
     if id == "": break
@@ -361,13 +508,15 @@ with open(inFile,'r') as fh:
       if trim == "":
         failPrimers += 1
       else:
-        #pseq = trim[58:59]
+        # Pseudogene check for CD33E1 
         pgene = trim.find(pseudo[:6])
+        # Pseudogene check for BE
+        #pgene = trim.find("ACGACAAGAACTCCCC")
         if pgene == -1:
             sd[trim] += 1
             goodCount += 1        
         else:
-            sd_pseudo[trim] += 1
+            sd_pseudo[trim[54:181]] += 1
             pseudoCount += 1
     allCount += 1
 #
@@ -379,239 +528,30 @@ print("fail primers = {}".format(failPrimers))
 print("total good   = {}".format(goodCount))
 print("pseudo genes = {}".format(pseudoCount))
 print(float(goodCount)/float(allCount))
-#
-# sort in order of sequence count
-#
-ssd = sorted(sd.items(),key=lambda al: al[1],reverse=True)  # smallest first
 
-ssp = sorted(sd_pseudo.items(),key=lambda kv:kv[1],reverse=True)
-#
-# create an ID for each combined seq group, store in preSeqDict based on ID
-#
-preSeqDict = {}
-prePseudoDict = {}   # for pseudogenes
-#
-# create fasta file for alignment
-#
-with open(outFile,'w') as fh:
-  id = 0
-  for k,v in ssd:
-    if v > 1:
-      seqID = "ID_{}".format(id)
-      preSeqDict[seqID] = (k,v)
-      fh.write(">" + seqID + "\n")
-      fh.write("{}\n".format(k))
-      id += 1
-#
-# fasta file for pseudogene
-#
-with open(pseudoFile,'w') as fh:
-  id = 0
-  for k,v in ssp:
-    if v > 1:
-      seqID = "ID_{}".format(id)
-      prePseudoDict[seqID] = (k,v)
-      fh.write(">" + seqID + "\n")
-      fh.write("{}\n".format(k))
-      id += 1
-
-print("Run Needle")
-#
-# call out to needle to generate alignment string - CIGAR
-#
-# if there is a problem, remember to "ml emboss"
-#
-print(refFile,outFile,samFile)
-p = subprocess.Popen(["needle", 
-    "-asequence",refFile,
-    "-bsequence",outFile,
-    "-gapopen","10.0",
-    "-gapextend","0.5",
-    "-aformat3","sam",
-    "-outfile",samFile], stdout=subprocess.PIPE)
-print(p.communicate())
-#
-# Needle for pseudogenes
-#
-print(refFile2,pseudoFile,pSamFile)
-p = subprocess.Popen(["needle", 
-    "-asequence",refFile2,
-    "-bsequence",pseudoFile,
-    "-gapopen","10.0",
-    "-gapextend","0.5",
-    "-aformat3","sam",
-    "-outfile",pSamFile], stdout=subprocess.PIPE)
-print(p.communicate())
-#
-# read in sam alignment, based in ID add to seqDict
-#
-seqDict = {}
-with open(samFile,'r') as fh:
-  while True:
-    l = fh.readline().strip()
-    if l == "": break
-    l = l.split('\t')
-    if l[0][0] == "@": continue
-    k = l[0]
-    cigar = l[5]
-    cgList = parseInsertCigar(cigar)
-    #
-    # get original sequence and count from seqDict
-    # -- can't find key is fatal error --
-    s,count = preSeqDict[k]
-    print(count)
-    #
-    # add on cigar string and cgList (tuple list of alignment)
-    #   -- sequences with really long cigar probably mean primer bound
-    #      to some remote DNA and alignment is bonkers
-    #      12 is arbitrary...some seq ave lots of SNPs but usually 3 is normal
-    #
-    if len(cgList) <= 12:
-      seqDict[k] = (s,count,cigar,cgList)
-    else:
-      print("Bad alignment for sequence")
-      print(seq)
-      print(cigar)
-#
-# read in sam alignment, based in ID add to seqDict for pseudogenes
-#
-pseqDict = {}
-with open(pSamFile,'r') as fh:
-  while True:
-    l = fh.readline().strip()
-    if l == "": break
-    l = l.split('\t')
-    if l[0][0] == "@": continue
-    k = l[0]
-    cigar = l[5]
-    cgList = parseInsertCigar(cigar)
-    #
-    # get original sequence and count from prePseudoDict
-    # -- can't find key is fatal error --
-    s,count = prePseudoDict[k]
-    print(count)
-    #
-    # add on cigar string and cgList (tuple list of alignment)
-    #   -- sequences with really long cigar probably mean primer bound
-    #      to some remote DNA and alignment is bonkers
-    #      12 is arbitrary...some seq ave lots of SNPs but usually 3 is normal
-    #
-    if len(cgList) <= 12:
-      pseqDict[k] = (s,count,cigar,cgList)
-    else:
-      print("Bad alignment for sequence")
-      print(seq)
-      print(cigar)
-
-#
-# don't accidentally use
-#
-preSeqDict = None
-prePseudoDict = None
-#
-# Use alignment + sequence + reference sequence to identify substitutions
-# and insertion sequences
-#
-# sortD = list if dictionary k,v pairs sorted by count
-#
-sortD = sorted(seqDict.items(),key=lambda al: al[1][1],reverse=True)  # smallest first
-sortPD = sorted(pseqDict.items(),key=lambda kv: kv[1][1],reverse=True)
-#
-# finalGroups will be the final list of sequence groups
-#
-finalGroups =[]
-finalGroups_p =[]
-#
-# for each sequence group do a base-by-base comparison to refseq 
-#
-for k,(seq,count,cigar,cgl) in sortD:
-  #print("012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789")
-  #for m in cgl:
-  #  print(m) 
-  #
-  # substitution mutations and insertion sequences
-  #
-  subs = []
-  insertions = []
-  align_seq = []
-  #
-  # base by base comparison
-  #    i = test sequence index
-  #    j = reference sequence index
-  #    cgl = list of (command,length) from CIGAR  M = match, I = insert, D = deletion
-  #
-  i = 0
-  j = 0
- 
-  for m in cgl:
-    cmdLength = int(m[1])
-    if m[0] == "M":
-      for t in range(0,cmdLength):
-        #print("comp {} {}".format(i,j))
-        if seq[i] != refseq[j]:
-          #print("substitue at ",i,seq[i],j,refseq[j])
-          mut = (j+1,refseq[j],i+1,seq[i])  # Increase the position no. by 1 (i and j) because the count in python begins at 0.
-          subs.append(mut)
-        i += 1
-        j += 1
-    elif m[0] == "D":
-      j = j + cmdLength
-    elif m[0] == 'I':
-      insertSeq = seq[i:i+cmdLength]
-      insertions.append(insertSeq)
-      i = i + cmdLength
-            
-  #
-  # add entry for sequence group with all data
-  #
-  finalGroups.append((k,seq,count,cigar,cgl,subs,insertions))
-# 
-#
-#for each sequence group in pseudo gene do a base-by-base comparison to refseq
-#
-#
-for k,(seq,count,cigar,cgl) in sortPD:
-  # substitution mutations and insertion sequences
-  #
-  subs = []
-  insertions = []
-  align_seq = []
-  #
-  # base by base comparison
-  #    i = test sequence index
-  #    j = reference sequence index
-  #    cgl = list of (command,length) from CIGAR  M = match, I = insert, D = deletion
-  #
-  i = 0
-  j = 0
- 
-  for m in cgl:
-    cmdLength = int(m[1])
-    if m[0] == "M":
-      for t in range(0,cmdLength):
-        #print("comp {} {}".format(i,j))
-        if seq[i] != pseudo[j]:
-          #print("substitue at ",i,seq[i],j,refseq[j])
-          Pmut = (j+1,pseudo[j],i+1,seq[i]) # Increase the counts of i and j by 1, positions in python start from 0.
-          subs.append(Pmut)
-        i += 1
-        j += 1
-    elif m[0] == "D":
-      j = j + cmdLength
-    elif m[0] == 'I':
-      insertSeq = seq[i:i+cmdLength]
-      insertions.append(insertSeq)
-      i = i + cmdLength
-            
-  #
-  # add entry for sequence group with all data
-  #
-  finalGroups_p.append((k,seq,count,cigar,cgl,subs,insertions))
-#
 #
 # final output
 #
 #
-out = alignment(csvFile,mutFile,finalGroups,goodCount,refseq)
+print("Wild type analysis!")
+needle_out = needle(sd,outFile,refFile,samFile)
 
-out_pseudo = alignment(pcsvFile,pmutFile,finalGroups_p,pseudoCount,pseudo)
+print("Step 4: Identifyting substitutions, insertions and deletions!")
+subs_out = seq_group(samFile,needle_out,refseq)
+
+print("Step 5: Final step!")
+out = alignment(csvFile,mutFile,subs_out,goodCount,refseq)
+
+# Results for pseudogene
+print("Pseudogene analysis!")
+pseudo_needle_out = needle(sd_pseudo,pseudoFile,refFile2,pSamFile)
+
+print("Step 4: Identifyting substitutions, insertions and deletions in pseudogenes!")
+pseudo_subs_out = seq_group(pSamFile,pseudo_needle_out,pseudo)
+
+print("Step 5: Final step for pseudogenes!")
+out_pseudo = alignment(pcsvFile,pmutFile,pseudo_subs_out,pseudoCount,pseudo)
+
+
+
+
